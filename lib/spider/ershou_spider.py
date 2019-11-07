@@ -77,7 +77,7 @@ class ErShouSpider(BaseSpider):
 
         # 从第一页开始,一直遍历到最后一页
         for num in range(1, total_page + 1):
-            page = 'http://{0}.{1}.com/ershoufang/{2}/pg{3}'.format(city_name, SPIDER_NAME, area_name, num)
+            page = 'http://{0}.{1}.com/ershoufang/{2}/pg{3}sf1sf2sf3sf4sf5'.format(city_name, SPIDER_NAME, area_name, num)
             print(page)  # 打印每一页的地址
             headers = create_headers()
             BaseSpider.random_delay()
@@ -92,6 +92,8 @@ class ErShouSpider(BaseSpider):
                 name = house_elem.find('div', class_='title')
                 desc = house_elem.find('div', class_="houseInfo")
                 pic = house_elem.find('a', class_="img").find('img', class_="lj-lazy")
+                url = house_elem.find('a', class_='maidian-detail').attrs['href']
+
 
                 # 继续清理数据
                 price = price.text.strip()
@@ -99,10 +101,14 @@ class ErShouSpider(BaseSpider):
                 desc = desc.text.replace("\n", "").strip()
                 pic = pic.get('data-original').strip()
                 # print(pic)
-
-
+                if name.count(',') >= 1:
+                    name = name.replace(",", "_")
+                if desc.count(',') >= 1:
+                    desc = desc.replace(",", "_")
+                if pic.count(',') >= 1:
+                    pic = pic.replace(",", "&&")
                 # 作为对象保存
-                ershou = ErShou(chinese_district, chinese_area, name, price, desc, pic)
+                ershou = ErShou(chinese_district, chinese_area, name, price, desc, pic, url)
                 ershou_list.append(ershou)
         return ershou_list
 

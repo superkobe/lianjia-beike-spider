@@ -38,7 +38,24 @@ CREATE TABLE `xiaoqu` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
+DROP TABLE IF EXISTS `ershou`;
 
+CREATE TABLE `ershou` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `city` varchar(10) DEFAULT NULL,
+  `date` varchar(8) DEFAULT NULL,
+  `district` varchar(50) DEFAULT NULL,
+  `area` varchar(50) DEFAULT NULL,
+  `title` varchar(200) DEFAULT NULL,
+  `house_type` varchar(200) DEFAULT NULL,
+  `floor` varchar(100) DEFAULT NULL,
+  `size` varchar(100) DEFAULT NULL,
+  `orientation` varchar(100) DEFAULT NULL,
+  `price` int(11) DEFAULT NULL,
+  `sale` int(11) DEFAULT NULL,
+  `url` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

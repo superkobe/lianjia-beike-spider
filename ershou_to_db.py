@@ -30,6 +30,42 @@ def create_prompt_text():
             city_info.append(", ")
     return 'Which city data do you want to save ?\n' + ''.join(city_info)
 
+def create_detail(detail):
+    floor = ''
+    year = ''
+    house_type = ''
+    size = ''
+    orientation = ''
+    dt_list = detail.split('  ')
+    for dt in dt_list:
+        if dt.strip() == '':
+            continue
+        elif dt.count('|') > 0:
+            for d in dt.split('|'):
+                if d.strip() == '':
+                    continue
+                elif '室' in d.strip() or '厅' in d.strip():
+                    house_type = d.strip()
+                elif '平' in d.strip() or '米' in d.strip():
+                    size = d.strip()
+                elif '南' in d.strip() or '北' in d.strip() or '东' in d.strip() or '西' in d.strip():
+                    orientation = d.strip()
+                elif '年' in d.strip():
+                    year = d.strip()
+                elif '层' in d.strip() or '楼' in d.strip():
+                    floor = d.strip()
+        elif '室' in dt.strip() or '厅' in dt.strip():
+            house_type = dt.strip()
+        elif '平' in dt.strip() or '米' in dt.strip():
+            size = dt.strip()
+        elif '南' in dt.strip() or '北' in dt.strip() or '东' in dt.strip() or '西' in dt.strip():
+            orientation = dt.strip()
+        elif '年' in dt.strip():
+            year = dt.strip()
+        elif '层' in dt.strip() or '楼' in d.strip():
+            floor = dt.strip()
+    return floor, year, house_type, size, orientation
+
 
 if __name__ == '__main__':
     # 设置目标数据库
@@ -62,7 +98,7 @@ if __name__ == '__main__':
     elif database == "json":
         import json
     elif database == "csv":
-        csv_file = open("xiaoqu.csv", "w")
+        csv_file = open("ershou.csv", "w")
         line = "{0};{1};{2};{3};{4};{5};{6}\n".format('city_ch', 'date', 'district', 'area', 'xiaoqu', 'price', 'sale')
         csv_file.write(line)
 
@@ -73,12 +109,12 @@ if __name__ == '__main__':
     # date = "20180331"   # 指定采集数据的日期
     # city = "sh"         # 指定采集数据的城市
     city_ch = get_chinese_city(city)
-    csv_dir = "{0}/{1}/xiaoqu/{2}/{3}".format(DATA_PATH, SPIDER_NAME, city, date)
+    csv_dir = "{0}/{1}/ershou/{2}/{3}".format(DATA_PATH, SPIDER_NAME, city, date)
 
     files = list()
     if not os.path.exists(csv_dir):
         print("{0} does not exist.".format(csv_dir))
-        print("Please run 'python xiaoqu.py' firstly.")
+        print("Please run 'python ershou.py' firstly.")
         print("Bye.")
         exit(0)
     else:
@@ -98,9 +134,42 @@ if __name__ == '__main__':
                 count += 1
                 text = line.strip()
                 try:
-                    # 如果小区名里面没有逗号，那么总共是6项
-                    if text.count(',') == 5:
-                        date, district, area, xiaoqu, price, sale = text.split(',')
+                    # 如果小区名里面没有逗号，那么总共是10项
+                    # if text.count(',') == 9:
+                    #     date, district, area, title, price, detail, pic1, pic2, pic3, pic4 = text.split(',')
+                    #     floor, size, orientation = detail.split('|')
+                    #     floor = floor.strip()
+                    #     size = size.strip()
+                    #     orientation = orientation.strip()
+                    #     title = ''
+                    #     house_type = ''
+                    # elif text.count(',') == 10:
+                    #     date, district, area, title1, title2, price, detail, pic1, pic2, pic3, pic4 = text.split(',')
+                    #     floor, year, house_type, size, orientation = detail.split('|')
+                    #     floor = floor.strip()
+                    #     size = size.strip()
+                    #     year = year.strip()
+                    #     house_type = house_type.strip()
+                    #     orientation = orientation.strip()
+                    #     title = title1 + title2
+                    # elif text.count(',') == 11:
+                    #     date, district, area, title1, title2, title3, price, detail, pic1, pic2, pic3, pic4 = text.split(',')
+                    #     floor, year, house_type, size, orientation = detail.split('|')
+                    #     floor = floor.strip()
+                    #     size = size.strip()
+                    #     year = year.strip()
+                    #     house_type = house_type.strip()
+                    #     orientation = orientation.strip()
+                    #     title = title1 + title2 + title3
+                    if text.count(',') == 7:
+                        date, district, area, title, price, detail, pic, url = text.split(',')
+                        floor = ''
+                        year = ''
+                        house_type = ''
+                        size = ''
+                        orientation = ''
+                        if text.split(',')[5].count('  ') > 0:
+                            floor, year, house_type, size, orientation = create_detail(text.split(',')[5])
                     elif text.count(',') < 5:
                         continue
                     else:
@@ -115,18 +184,21 @@ if __name__ == '__main__':
                     print(text)
                     print(e)
                     continue
-                sale = sale.replace(r'套在售二手房', '')
+                # sale = sale.replace(r'套在售二手房', '')
                 price = price.replace(r'暂无', '0')
                 price = price.replace(r'元/m2', '')
-                price = int(price)
-                sale = int(sale)
-                print("{0} {1} {2} {3} {4} {5}".format(date, district, area, xiaoqu, price, sale))
+                price = price.replace(r'万', '0000')
+                if price.count('.') == 1:
+                    price = int(float(price))
+                # sale = int(sale)
+                else:
+                    price = int(price)
+                print("{0} {1} {2} {3} {4} {5} {6} {7}".format(date, district, area, title, house_type, floor, size, orientation, price, url))
                 # 写入mysql数据库
                 if database == "mysql":
-                    db.query('INSERT INTO xiaoqu (city, date, district, area, xiaoqu, price, sale) '
-                             'VALUES(:city, :date, :district, :area, :xiaoqu, :price, :sale)',
-                             city=city_ch, date=date, district=district, area=area, xiaoqu=xiaoqu, price=price,
-                             sale=sale)
+                    db.query('INSERT INTO ershou (city, date, district, area, title, house_type, floor, size, orientation, price, url) '
+                             'VALUES(:city, :date, :district, :area, :title, :house_type, :floor, :size, :orientation, :price, :url)',
+                             city=city_ch, date=date, district=district, area=area, title=title, house_type=house_type, floor=floor, size=size, orientation=orientation, price=price, url=url)
                 # 写入mongodb数据库
                 elif database == "mongodb":
                     data = dict(city=city_ch, date=date, district=district, area=area, xiaoqu=xiaoqu, price=price,
